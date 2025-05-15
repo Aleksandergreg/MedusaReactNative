@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../../src/state/AuthContext';
 import { useBiometrics, BiometricAuthResult } from '../../src/hooks/useBiometrics';
@@ -11,34 +11,62 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [loading, setLoading] = useState(false);
+  const [savedEmail, setSavedEmail] = useState<string | null>(null);
+
+  // Check for saved email on component mount
+  useEffect(() => {
+    const checkSavedEmail = async () => {
+      try {
+        const email = await AsyncStorage.getItem('lastRegisteredEmail');
+        setSavedEmail(email);
+      } catch (error) {
+        console.error("Error retrieving saved email:", error);
+      }
+    };
+    checkSavedEmail();
+  }, []);
 
   const handleAuth = async () => {
     setLoading(true);
     const success = mode === 'login'
       ? await login(email, password)
       : await signup(email, password);
+    
     setLoading(false);
-    if (!success) Alert.alert('Error', 'Invalid credentials');
-    else if (mode === 'signup') {
-      await AsyncStorage.setItem('lastRegisteredEmail', email);
+    
+    if (!success) {
+      Alert.alert('Error', 'Invalid credentials');
+      return;
     }
-    else if (mode === 'login' && isSupported && isEnrolled) {
-      Alert.alert('Enable Biometric Login?', 'Would you like to enable biometric login for future logins?', [
-        { text: 'No' },
-        { text: 'Yes', onPress: () => setBiometricsEnabled(true) },
-      ]);
+    
+    // Store email for future biometric login
+    await AsyncStorage.setItem('lastRegisteredEmail', email);
+    setSavedEmail(email);
+    
+    // If successful login and biometrics available, offer to enable
+    if (mode === 'login' && isSupported && isEnrolled) {
+      Alert.alert(
+        'Enable Biometric Login?', 
+        'Would you like to enable biometric login for future logins?', 
+        [
+          { text: 'No' },
+          { text: 'Yes', onPress: () => setBiometricsEnabled(true) },
+        ]
+      );
     }
   };
 
   const handleBiometricLogin = async () => {
     const result = await authenticate('Login with biometrics');
     if (result === BiometricAuthResult.SUCCESS) {
-      // Log in the last registered user
-      const lastEmail = await AsyncStorage.getItem('lastRegisteredEmail');
-      if (lastEmail) {
-        await login(lastEmail, 'biometric');
+      // Check if we have a saved email
+      if (savedEmail) {
+        const success = await login(savedEmail, 'biometric');
+        if (!success) {
+          Alert.alert('Error', 'Failed to log in using biometrics');
+        }
       } else {
-        Alert.alert('No user found for biometric login. Please sign up first.');
+        Alert.alert('No user found', 'Please sign up or log in with email and password first.');
       }
     } else if (result === BiometricAuthResult.ERROR) {
       Alert.alert('Biometric login failed');
@@ -77,7 +105,7 @@ export default function AuthScreen() {
         title={mode === 'login' ? 'Switch to Sign Up' : 'Switch to Login'}
         onPress={() => setMode(mode === 'login' ? 'signup' : 'login')}
       />
-      {biometricsEnabled && isSupported && isEnrolled && (
+      {savedEmail && biometricsEnabled && isSupported && isEnrolled && (
         <Button title="Login with Biometrics" onPress={handleBiometricLogin} />
       )}
     </View>

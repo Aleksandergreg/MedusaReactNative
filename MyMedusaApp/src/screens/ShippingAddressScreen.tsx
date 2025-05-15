@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Button, ScrollView, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, TextInput, StyleSheet, Button, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 interface ShippingAddress {
   fullName: string;
@@ -15,6 +15,9 @@ interface ShippingAddress {
 
 const ShippingAddressScreen = () => {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const total = typeof params.total === 'string' ? params.total : '0';
+  
   const [address, setAddress] = useState<ShippingAddress>({
     fullName: '',
     addressLine1: '',
@@ -41,14 +44,20 @@ const ShippingAddressScreen = () => {
     }
 
     // In a real app, you'd save this address to your backend/state
-    Alert.alert('Success', 'Shipping address saved!', [
-      { text: 'OK', onPress: () => router.back() }
-    ]);
+    // Navigate to payment screen with total and shipping data
+    router.push({
+      pathname: '/(tabs)/payment',
+      params: { 
+        total,
+        shippingAddress: JSON.stringify(address)
+      }
+    });
   };
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Shipping Address</Text>
+      <Text style={styles.subtitle}>Step 1 of 2</Text>
       
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Full Name *</Text>
@@ -134,7 +143,9 @@ const ShippingAddressScreen = () => {
         />
       </View>
       
-      <Button title="Save Address" onPress={handleSubmit} />
+      <TouchableOpacity style={styles.continueButton} onPress={handleSubmit}>
+        <Text style={styles.continueButtonText}>Continue to Payment</Text>
+      </TouchableOpacity>
       
       <Text style={styles.note}>* Required fields</Text>
     </ScrollView>
@@ -150,6 +161,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -174,6 +191,19 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+  },
+  continueButton: {
+    backgroundColor: '#007AFF',
+    height: 56,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  continueButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
   note: {
     marginTop: 20,

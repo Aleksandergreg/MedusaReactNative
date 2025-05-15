@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface CartItem {
   id: string;
@@ -19,6 +20,33 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  // Load cart from storage when component mounts
+  useEffect(() => {
+    const loadCart = async () => {
+      try {
+        const savedCart = await AsyncStorage.getItem('cart');
+        if (savedCart) {
+          setCartItems(JSON.parse(savedCart));
+        }
+      } catch (error) {
+        console.error('Error loading cart from AsyncStorage:', error);
+      }
+    };
+    loadCart();
+  }, []);
+
+  // Save cart to storage whenever it changes
+  useEffect(() => {
+    const saveCart = async () => {
+      try {
+        await AsyncStorage.setItem('cart', JSON.stringify(cartItems));
+      } catch (error) {
+        console.error('Error saving cart to AsyncStorage:', error);
+      }
+    };
+    saveCart();
+  }, [cartItems]);
 
   const addToCart = (item: CartItem) => {
     setCartItems(prev => {

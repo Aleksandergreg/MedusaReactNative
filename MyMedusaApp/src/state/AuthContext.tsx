@@ -22,6 +22,7 @@ interface AuthContextType {
   setBiometricsEnabled: (enabled: boolean) => void;
   getOrders: () => Promise<Order[]>;
   addOrder: (order: Order) => Promise<void>;
+  completeOrder: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -78,8 +79,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await AsyncStorage.setItem(key, JSON.stringify(orders));
   };
 
+  const completeOrder = async () => {
+    if (!user) return;
+    
+    const cart = await AsyncStorage.getItem('cart');
+    if (!cart) return;
+    
+    const cartItems = JSON.parse(cart);
+    const total = cartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+    
+    const order = {
+      id: Date.now().toString(),
+      date: new Date().toLocaleString(),
+      items: cartItems,
+      total,
+    };
+    
+    await addOrder(order);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, signup, logout, biometricsEnabled, setBiometricsEnabled, getOrders, addOrder }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoggedIn: !!user, 
+      login, 
+      signup, 
+      logout, 
+      biometricsEnabled, 
+      setBiometricsEnabled, 
+      getOrders, 
+      addOrder,
+      completeOrder 
+    }}>
       {children}
     </AuthContext.Provider>
   );

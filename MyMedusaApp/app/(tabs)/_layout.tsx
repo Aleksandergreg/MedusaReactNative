@@ -92,31 +92,36 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="shipping-address"
-        options={{
-          title: 'Shipping',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="location.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="minigame"
         options={{
           title: 'Mini Game',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="gamecontroller.fill" color={color} />,
         }}
       />
+      
+      {/* Hidden screens - these screens exist but won't show in the tab bar */}
       <Tabs.Screen
         name="auth"
         options={{
-          title: 'Auth',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="lock.fill" color={color} />,
+          href: null, // Prevents the tab from being accessible via the tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="shipping-address"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="payment"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

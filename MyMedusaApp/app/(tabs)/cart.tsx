@@ -6,10 +6,9 @@ import { useRouter } from 'expo-router';
 
 const CartScreen = () => {
   const { cartItems, removeFromCart, clearCart } = useCart();
-  const { isLoggedIn, addOrder } = useAuth();
+  const { isLoggedIn } = useAuth();
   const router = useRouter();
   const [checkingOut, setCheckingOut] = useState(false);
-  const [orderComplete, setOrderComplete] = useState(false);
 
   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -21,19 +20,12 @@ const CartScreen = () => {
       ]);
       return;
     }
-    setCheckingOut(true);
-    setTimeout(async () => {
-      const order = {
-        id: Date.now().toString(),
-        date: new Date().toLocaleString(),
-        items: cartItems,
-        total,
-      };
-      await addOrder(order);
-      setOrderComplete(true);
-      clearCart();
-      setCheckingOut(false);
-    }, 1500);
+    
+    // Navigate to shipping address first
+    router.push({
+      pathname: '/(tabs)/shipping-address',
+      params: { total: total.toFixed(2) }
+    });
   };
 
   const renderItem = ({ item }: { item: { id: string; name: string; price: number; quantity: number; thumbnail?: string } }) => (
@@ -59,16 +51,6 @@ const CartScreen = () => {
       </View>
     </View>
   );
-
-  if (orderComplete) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Thank you for your purchase! 🎉</Text>
-        <Text style={styles.body}>Your order has been placed successfully.</Text>
-        <Button title="Back to Shop" onPress={() => setOrderComplete(false)} />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
