@@ -1,108 +1,186 @@
 import React, { useState } from 'react';
-import { View, Button, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { useLocation, LocationStatus } from '../hooks/useLocation';
+import { View, Text, TextInput, StyleSheet, Button, ScrollView, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 
-const OPENCAGE_API_KEY = '04a501ae949f498594ce3be8aaa71bbf';
+interface ShippingAddress {
+  fullName: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone: string;
+}
 
 const ShippingAddressScreen = () => {
-  const { location, status, permissionStatus, getCurrentLocation, requestPermission } = useLocation();
-  const [address, setAddress] = useState<string | null>(null);
-  const [fetchingAddress, setFetchingAddress] = useState(false);
-  const [addressError, setAddressError] = useState<string | null>(null);
+  const router = useRouter();
+  const [address, setAddress] = useState<ShippingAddress>({
+    fullName: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
+    phone: '',
+  });
 
-  const handlePrefillLocation = async () => {
-    setAddress(null);
-    setAddressError(null);
-    await getCurrentLocation();
+  const handleChange = (field: keyof ShippingAddress, value: string) => {
+    setAddress((prev) => ({ ...prev, [field]: value }));
   };
 
-  React.useEffect(() => {
-    const fetchAddress = async () => {
-      if (location) {
-        setFetchingAddress(true);
-        setAddressError(null);
-        try {
-          const response = await fetch(
-            `https://api.opencagedata.com/geocode/v1/json?q=${location.latitude}+${location.longitude}&key=${OPENCAGE_API_KEY}`
-          );
-          const data = await response.json();
-          if (data.results && data.results.length > 0) {
-            setAddress(data.results[0].formatted);
-          } else {
-            setAddressError('No address found for this location.');
-          }
-        } catch (err) {
-          setAddressError('Failed to fetch address.');
-        } finally {
-          setFetchingAddress(false);
-        }
-      }
-    };
-    if (status === LocationStatus.SUCCESS && location) {
-      fetchAddress();
+  const handleSubmit = () => {
+    // Validate required fields
+    const requiredFields: (keyof ShippingAddress)[] = ['fullName', 'addressLine1', 'city', 'postalCode', 'country'];
+    const missingFields = requiredFields.filter(field => !address[field]);
+    
+    if (missingFields.length > 0) {
+      Alert.alert('Missing Information', `Please fill in the following fields: ${missingFields.join(', ')}`);
+      return;
     }
-  }, [location, status]);
+
+    // In a real app, you'd save this address to your backend/state
+    Alert.alert('Success', 'Shipping address saved!', [
+      { text: 'OK', onPress: () => router.back() }
+    ]);
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.statusText}>Location Permission: {permissionStatus || 'Checking...'}</Text>
-      <Text style={styles.statusText}>Fetch Status: {status}</Text>
-
-      {status === LocationStatus.PERMISSION_DENIED && (
-        <Button title="Grant Location Permission" onPress={requestPermission} />
-      )}
-
-      {(status === LocationStatus.IDLE || status === LocationStatus.SUCCESS || status === LocationStatus.ERROR) && permissionStatus === 'granted' && (
-        <Button title="Get Current Location for Prefill" onPress={handlePrefillLocation} />
-      )}
-
-      {status === LocationStatus.FETCHING && <ActivityIndicator size="large" style={{marginTop: 20}} />}
-
-      {status === LocationStatus.SUCCESS && location && (
-        <View style={styles.locationInfo}>
-          <Text>Latitude: {location.latitude.toFixed(4)}</Text>
-          <Text>Longitude: {location.longitude.toFixed(4)}</Text>
-          {fetchingAddress && <ActivityIndicator size="small" style={{marginTop: 10}} />}
-          {address && <Text style={styles.addressText}>Address: {address}</Text>}
-          {addressError && <Text style={styles.errorText}>{addressError}</Text>}
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Shipping Address</Text>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Full Name *</Text>
+        <TextInput
+          style={styles.input}
+          value={address.fullName}
+          onChangeText={(text) => handleChange('fullName', text)}
+          placeholder="John Doe"
+        />
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Address Line 1 *</Text>
+        <TextInput
+          style={styles.input}
+          value={address.addressLine1}
+          onChangeText={(text) => handleChange('addressLine1', text)}
+          placeholder="123 Main Street"
+        />
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Address Line 2</Text>
+        <TextInput
+          style={styles.input}
+          value={address.addressLine2}
+          onChangeText={(text) => handleChange('addressLine2', text)}
+          placeholder="Apt 4B (Optional)"
+        />
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>City *</Text>
+        <TextInput
+          style={styles.input}
+          value={address.city}
+          onChangeText={(text) => handleChange('city', text)}
+          placeholder="New York"
+        />
+      </View>
+      
+      <View style={styles.row}>
+        <View style={[styles.inputGroup, styles.halfWidth]}>
+          <Text style={styles.label}>State/Province *</Text>
+          <TextInput
+            style={styles.input}
+            value={address.state}
+            onChangeText={(text) => handleChange('state', text)}
+            placeholder="NY"
+          />
         </View>
-      )}
-      {status === LocationStatus.ERROR && (
-        <Text style={styles.errorText}>Could not fetch location. Please try again or enter manually.</Text>
-      )}
-    </View>
+        
+        <View style={[styles.inputGroup, styles.halfWidth]}>
+          <Text style={styles.label}>Postal Code *</Text>
+          <TextInput
+            style={styles.input}
+            value={address.postalCode}
+            onChangeText={(text) => handleChange('postalCode', text)}
+            placeholder="10001"
+            keyboardType="numeric"
+          />
+        </View>
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Country *</Text>
+        <TextInput
+          style={styles.input}
+          value={address.country}
+          onChangeText={(text) => handleChange('country', text)}
+          placeholder="United States"
+        />
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Phone Number</Text>
+        <TextInput
+          style={styles.input}
+          value={address.phone}
+          onChangeText={(text) => handleChange('phone', text)}
+          placeholder="+1 (555) 123-4567"
+          keyboardType="phone-pad"
+        />
+      </View>
+      
+      <Button title="Save Address" onPress={handleSubmit} />
+      
+      <Text style={styles.note}>* Required fields</Text>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#fff',
   },
-  statusText: {
-    marginBottom: 10,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  halfWidth: {
+    width: '48%',
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
   },
-  locationInfo: {
+  note: {
     marginTop: 20,
-    padding: 15,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  addressText: {
-    marginTop: 10,
-    color: '#007AFF',
-    fontSize: 16,
     textAlign: 'center',
+    color: '#666',
+    marginBottom: 30,
   },
-  errorText: {
-    marginTop: 10,
-    color: 'red',
-    textAlign: 'center',
-  }
 });
 
 export default ShippingAddressScreen; 

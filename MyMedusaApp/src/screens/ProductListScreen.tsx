@@ -13,8 +13,7 @@ import {
   SafeAreaView,
   RefreshControl
 } from 'react-native';
-import { fetchProducts } from '../services/productService';
-import { Product } from '@medusajs/medusa';
+import { fetchProducts, Product } from '../services/productService';
 import { useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');

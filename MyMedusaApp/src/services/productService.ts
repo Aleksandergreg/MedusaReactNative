@@ -1,6 +1,44 @@
 // src/services/productService.ts
 import medusaClient from '../api/medusaClient';
-import { StoreProductsListRes, StoreProductsListParams } from '@medusajs/medusa'; // Import types if available
+
+// Custom type definitions to replace dependencies on @medusajs/medusa
+export interface Product {
+  id: string;
+  title: string;
+  description: string | null;
+  thumbnail: string | null;
+  handle: string | null;
+  variants: ProductVariant[];
+  [key: string]: any; // For any additional fields
+}
+
+export interface ProductVariant {
+  id: string;
+  title: string;
+  prices: ProductPrice[];
+  [key: string]: any; // For any additional fields
+}
+
+export interface ProductPrice {
+  id: string;
+  amount: number;
+  currency_code: string;
+  [key: string]: any; // For any additional fields
+}
+
+export interface StoreProductsListParams {
+  limit?: number;
+  offset?: number;
+  q?: string;
+  [key: string]: any; // For any additional filtering options
+}
+
+export interface StoreProductsListRes {
+  products: Product[];
+  count: number;
+  offset: number;
+  limit: number;
+}
 
 export const fetchProducts = async (params?: StoreProductsListParams): Promise<StoreProductsListRes> => {
   try {
