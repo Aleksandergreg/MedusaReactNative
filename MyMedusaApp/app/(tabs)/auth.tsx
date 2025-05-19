@@ -13,18 +13,23 @@ export default function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const [savedEmail, setSavedEmail] = useState<string | null>(null);
 
-  // Check for saved email on component mount
+  // Check for saved email on component mount and try biometric login if possible
   useEffect(() => {
     const checkSavedEmail = async () => {
       try {
         const email = await AsyncStorage.getItem('lastRegisteredEmail');
         setSavedEmail(email);
+
+        // If biometrics is enabled and we have a saved email, try biometric login automatically
+        if (email && biometricsEnabled && isSupported && isEnrolled && !isLoggedIn) {
+          handleBiometricLogin();
+        }
       } catch (error) {
         console.error("Error retrieving saved email:", error);
       }
     };
     checkSavedEmail();
-  }, []);
+  }, [biometricsEnabled, isSupported, isEnrolled, isLoggedIn]);
 
   const handleAuth = async () => {
     setLoading(true);

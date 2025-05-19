@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Button, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Button, TouchableOpacity, Alert, Image, SafeAreaView } from 'react-native';
 import { useCart } from '../../src/state/CartContext';
 import { useAuth } from '../../src/state/AuthContext';
 import { useRouter } from 'expo-router';
@@ -53,14 +53,15 @@ const CartScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Your Cart</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Your Cart</Text>
+      </View>
       <FlatList
         data={cartItems}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         ListEmptyComponent={<Text style={styles.empty}>Your cart is empty.</Text>}
-        style={styles.list}
         contentContainerStyle={styles.listContent}
       />
       <View style={styles.footer}>
@@ -74,42 +75,41 @@ const CartScreen = () => {
           <Button title={checkingOut ? 'Processing...' : 'Proceed to Checkout'} onPress={handleCheckout} disabled={cartItems.length === 0 || checkingOut} />
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f9fa',
+  },
+  header: {
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  body: {
-    fontSize: 16,
-    color: '#444',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  list: {
-    flex: 1,
-    width: '100%',
+    marginBottom: 8,
   },
   listContent: {
+    padding: 16,
     paddingBottom: 20,
   },
   item: {
     flexDirection: 'row',
-    backgroundColor: '#f7f7f7',
+    backgroundColor: '#fff',
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   thumbnail: {
     width: 70,
@@ -158,6 +158,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#eee',
     paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: '#fff',
   },
   summary: {
     flexDirection: 'row',
