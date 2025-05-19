@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Button, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet, Button, ScrollView, Alert, TouchableOpacity, Switch } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useAuth } from '../state/AuthContext';
 
 interface ShippingAddress {
   fullName: string;
@@ -17,6 +18,7 @@ const ShippingAddressScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const total = typeof params.total === 'string' ? params.total : '0';
+  const { isLoggedIn, savedShippingAddress, saveShippingAddress } = useAuth();
   
   const [address, setAddress] = useState<ShippingAddress>({
     fullName: '',
@@ -28,12 +30,20 @@ const ShippingAddressScreen = () => {
     country: '',
     phone: '',
   });
+  const [saveAddress, setSaveAddress] = useState(false);
+  
+  // Load saved address if available
+  useEffect(() => {
+    if (isLoggedIn && savedShippingAddress) {
+      setAddress(savedShippingAddress);
+    }
+  }, [isLoggedIn, savedShippingAddress]);
 
   const handleChange = (field: keyof ShippingAddress, value: string) => {
     setAddress((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate required fields
     const requiredFields: (keyof ShippingAddress)[] = ['fullName', 'addressLine1', 'city', 'postalCode', 'country'];
     const missingFields = requiredFields.filter(field => !address[field]);
@@ -42,8 +52,13 @@ const ShippingAddressScreen = () => {
       Alert.alert('Missing Information', `Please fill in the following fields: ${missingFields.join(', ')}`);
       return;
     }
+    
+    // Save address if user is logged in and the save option is selected
+    if (isLoggedIn && saveAddress) {
+      await saveShippingAddress(address);
+      Alert.alert('Success', 'Your shipping address has been saved for future orders.');
+    }
 
-    // In a real app, you'd save this address to your backend/state
     // Navigate to payment screen with total and shipping data
     router.push({
       pathname: '/(tabs)/payment',
@@ -58,6 +73,12 @@ const ShippingAddressScreen = () => {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Shipping Address</Text>
       <Text style={styles.subtitle}>Step 1 of 2</Text>
+      
+      {isLoggedIn && savedShippingAddress && (
+        <View style={styles.savedAddressContainer}>
+          <Text style={styles.savedAddressTitle}>Using your saved shipping address</Text>
+        </View>
+      )}
       
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Full Name *</Text>
@@ -143,6 +164,18 @@ const ShippingAddressScreen = () => {
         />
       </View>
       
+      {isLoggedIn && (
+        <View style={styles.saveAddressContainer}>
+          <Text style={styles.saveAddressLabel}>Save this address for future orders?</Text>
+          <Switch
+            value={saveAddress}
+            onValueChange={setSaveAddress}
+            trackColor={{ false: '#767577', true: '#81b0ff' }}
+            thumbColor={saveAddress ? '#007AFF' : '#f4f3f4'}
+          />
+        </View>
+      )}
+      
       <TouchableOpacity style={styles.continueButton} onPress={handleSubmit}>
         <Text style={styles.continueButtonText}>Continue to Payment</Text>
       </TouchableOpacity>
@@ -170,6 +203,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
+  savedAddressContainer: {
+    backgroundColor: '#e6f7ff',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#b3e0ff',
+  },
+  savedAddressTitle: {
+    fontSize: 16,
+    color: '#0066cc',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
   inputGroup: {
     marginBottom: 16,
   },
@@ -191,6 +238,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+  },
+  saveAddressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+  },
+  saveAddressLabel: {
+    fontSize: 16,
+    color: '#444',
+    flex: 1,
   },
   continueButton: {
     backgroundColor: '#007AFF',
