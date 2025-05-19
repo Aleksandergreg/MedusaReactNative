@@ -19,9 +19,9 @@ import { FontAwesome } from '@expo/vector-icons';
 import ScreenContainer from '@/components/ScreenContainer';
 
 // Regular expressions for card recognition (for demonstration purposes)
-const CARD_NUMBER_REGEX = /\b(?:\d[ -]*?){13,19}\b/g;
-const EXPIRY_DATE_REGEX = /\b(0[1-9]|1[0-2])[\/\s.-]?([0-9]{2})\b/g;
-const NAME_REGEX = /\b[A-Z][A-Z\s]{2,26}\b/g;
+const CARD_NUMBER_REGEX = /\\b(?:\\d[ -]*?){13,19}\\b/g;
+const EXPIRY_DATE_REGEX = /\\b(0[1-9]|1[0-2])[\\/\\s.-]?([0-9]{2})\\b/g;
+const NAME_REGEX = /\\b[A-Z][A-Z\\s]{2,26}\\b/g;
 
 const PaymentScreen = () => {
   const router = useRouter();
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     marginBottom: 10,
-  }
+  },
 });
 
 export default PaymentScreen; 
