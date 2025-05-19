@@ -4,18 +4,19 @@ import { useAuth } from '../../src/state/AuthContext';
 import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
-  const { user, isLoggedIn, getOrders, logout } = useAuth();
+  const { user, isLoggedIn, getOrders, logout, orderRefreshFlag } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     if (isLoggedIn) {
+      setLoading(true);
       getOrders().then(setOrders).finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, orderRefreshFlag]);
 
   if (!isLoggedIn) {
     return (

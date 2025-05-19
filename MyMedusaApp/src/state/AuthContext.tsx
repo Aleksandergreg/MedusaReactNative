@@ -23,6 +23,7 @@ interface AuthContextType {
   getOrders: () => Promise<Order[]>;
   addOrder: (order: Order) => Promise<void>;
   completeOrder: () => Promise<void>;
+  orderRefreshFlag: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [biometricsEnabled, setBiometricsEnabledState] = useState(false);
+  const [orderRefreshFlag, setOrderRefreshFlag] = useState(0);
 
   useEffect(() => {
     AsyncStorage.getItem('biometricsEnabled').then(val => {
@@ -77,6 +79,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const orders = await getOrders();
     orders.unshift(order);
     await AsyncStorage.setItem(key, JSON.stringify(orders));
+    // Increment the refresh flag to trigger updates
+    setOrderRefreshFlag(prev => prev + 1);
   };
 
   const completeOrder = async () => {
@@ -109,7 +113,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setBiometricsEnabled, 
       getOrders, 
       addOrder,
-      completeOrder 
+      completeOrder,
+      orderRefreshFlag
     }}>
       {children}
     </AuthContext.Provider>

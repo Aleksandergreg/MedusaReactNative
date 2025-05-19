@@ -84,7 +84,7 @@ const PaymentScreen = () => {
       Alert.alert(
         'Payment Successful!', 
         'Your order has been placed successfully.',
-        [{ text: 'OK', onPress: () => router.push('/(tabs)/home') }]
+        [{ text: 'OK', onPress: () => router.push('/(tabs)/profile') }]
       );
     }, 1500);
   };

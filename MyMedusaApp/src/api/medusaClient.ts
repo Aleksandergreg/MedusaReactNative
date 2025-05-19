@@ -7,7 +7,7 @@ import axios from 'axios';
 // - Android Emulator: Use http://10.0.2.2:9000 (Android Emulator's alias for host machine's localhost)
 // - Physical Device: Use your machine's local network IP address http://10.15.27.231:9000 (e.g., http://192.168.1.10:9000)
 // In a real app, this might be dynamically determined or set via environment variables.
-const MEDUSA_BACKEND_URL = 'http://10.15.27.231:9000'; // Adjust if needed for Android Emulator/Physical Device
+const MEDUSA_BACKEND_URL = 'http://10.136.137.96:9000'; // Adjust if needed for Android Emulator/Physical Device
 
 const medusaClient = axios.create({
   baseURL: `${MEDUSA_BACKEND_URL}/store`, // Default to /store endpoints
