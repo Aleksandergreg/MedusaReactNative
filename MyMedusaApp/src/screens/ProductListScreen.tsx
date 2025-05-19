@@ -10,11 +10,11 @@ import {
   Image, 
   TouchableOpacity,
   Dimensions,
-  SafeAreaView,
   RefreshControl
 } from 'react-native';
 import { fetchProducts, Product } from '../services/productService';
 import { useRouter } from 'expo-router';
+import ScreenContainer from '@/components/ScreenContainer';
 
 const { width } = Dimensions.get('window');
 const cardWidth = width * 0.9;
@@ -97,23 +97,23 @@ const ProductListScreen = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <ScreenContainer style={styles.centered}>
         <ActivityIndicator size="large" color="#007AFF" />
-      </View>
+      </ScreenContainer>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
+      <ScreenContainer style={styles.centered}>
         <Text style={styles.errorText}>{error}</Text>
         <Button title="Retry" onPress={() => loadProducts()} />
-      </View>
+      </ScreenContainer>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenContainer style={styles.container}>
       <FlatList
         data={products}
         renderItem={renderProduct}
@@ -128,17 +128,15 @@ const ProductListScreen = () => {
           />
         }
       />
-    </SafeAreaView>
+    </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#f8f9fa',
   },
   centered: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,

@@ -51,7 +51,8 @@
         {
           "faceIDPermission": "Enable Face ID for quick and secure login."
         }
-      ]
+      ],
+      "react-native-vision-camera"
     ],
     "experiments": {
       "typedRoutes": true

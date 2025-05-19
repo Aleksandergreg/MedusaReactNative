@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, Button } from 'react-native';
 import { useRouter } from 'expo-router';
+import ScreenContainer from '@/components/ScreenContainer';
 
 const HomeScreen = () => {
   const router = useRouter();
   return (
-    <View style={styles.container}>
+    <ScreenContainer style={styles.container}>
       <Image
         source={{ uri: 'https://medusajs.com/static/medusa-logo.svg' }}
         style={styles.logo}
@@ -23,14 +24,12 @@ const HomeScreen = () => {
         onPress={() => router.push('/(tabs)/products')}
         color="#007AFF"
       />
-    </View>
+    </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
