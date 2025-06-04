@@ -12,7 +12,7 @@ export enum BiometricAuthResult {
 }
 
 export const useBiometrics = () => {
-  const [isSupported, setIsSupported] = useState(false); // Fixed: Added isSupported and setIsSupported
+  const [isSupported, setIsSupported] = useState(false); 
   const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export const useBiometrics = () => {
       }
     };
     checkSupport();
-  }, []); // Fixed: Corrected dependency array
+  }, []); 
 
   const authenticate = async (promptMessage: string = 'Authenticate'): Promise<BiometricAuthResult> => {
     if (!isSupported) {

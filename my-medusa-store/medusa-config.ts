@@ -12,5 +12,16 @@ module.exports = defineConfig({
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     }
-  }
+  },
+  plugins: [
+    {
+      resolve: 'medusa-payment-stripe',
+      options: {
+        api_key: process.env.STRIPE_API_KEY,
+        webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
+        automatic_payment_methods: true,
+        capture: true,  // Automatically capture payments when an order is created
+      }
+    }
+  ]
 })

@@ -1,37 +1,38 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  Alert, 
-  TouchableOpacity, 
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Alert,
+  TouchableOpacity,
   ActivityIndicator,
   Platform,
   ScrollView,
   KeyboardAvoidingView,
-  ImageBackground
+  // ImageBackground, // Removed as it was not used
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/state/AuthContext';
 import { useCart } from '../../src/state/CartContext';
 import { FontAwesome } from '@expo/vector-icons';
 import ScreenContainer from '@/components/ScreenContainer';
+import { CameraView, useCameraPermissions } from 'expo-camera'; // Import CameraView and useCameraPermissions
 
 // Regular expressions for card recognition (for demonstration purposes)
-const CARD_NUMBER_REGEX = /\\b(?:\\d[ -]*?){13,19}\\b/g;
-const EXPIRY_DATE_REGEX = /\\b(0[1-9]|1[0-2])[\\/\\s.-]?([0-9]{2})\\b/g;
-const NAME_REGEX = /\\b[A-Z][A-Z\\s]{2,26}\\b/g;
+const CARD_NUMBER_REGEX = /\b(?:\d[ -]*?){13,19}\b/g;
+const EXPIRY_DATE_REGEX = /\b(0[1-9]|1[0-2])[\/\s.-]?([0-9]{2})\b/g;
+const NAME_REGEX = /\b[A-Z][A-Z\s]{2,26}\b/g;
 
 const PaymentScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const totalAmount = typeof params.total === 'string' ? params.total : '0';
   const shippingAddressJson = typeof params.shippingAddress === 'string' ? params.shippingAddress : '{}';
-  const shippingAddress = JSON.parse(shippingAddressJson);
+  const shippingAddress = JSON.parse(shippingAddressJson); // Consider adding try-catch for robustness
   const { completeOrder } = useAuth();
   const { clearCart } = useCart();
-  
+
   const [cardNumber, setCardNumber] = useState('');
   const [cardholderName, setCardholderName] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -39,80 +40,91 @@ const PaymentScreen = () => {
   const [processing, setProcessing] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState('');
-  const [scanningProgress, setScanningProgress] = useState(0);
-  
-  // Camera simulation states
+  // const [scanningProgress, setScanningProgress] = useState(0); // Keep if you plan to use it, otherwise can be removed
+
+  // Camera and simulation states
+  const [permission, requestPermission] = useCameraPermissions();
   const [captureComplete, setCaptureComplete] = useState(false);
   const [analyzeComplete, setAnalyzeComplete] = useState(false);
-  
-  // Start the card scanning simulation
-  const startScanning = () => {
+
+  // Start the card scanning process (request permission and show camera)
+  const startCardScan = async () => {
+    if (!permission) {
+      // Permissions are still loading, wait for them.
+      // This case should ideally be handled by useEffect or initial permission check.
+      const perm = await requestPermission();
+      if (!perm.granted) {
+        Alert.alert('Permission Required', 'Camera permission is needed to scan your card.');
+        return;
+      }
+    } else if (!permission.granted) {
+      const perm = await requestPermission(); // Re-request if not granted initially
+      if (!perm.granted) {
+        Alert.alert('Permission Denied', 'Please enable camera permissions in settings to use this feature.');
+        return;
+      }
+    }
+
     setIsScanning(true);
     setScanStatus('Position your card in the frame');
-    setScanningProgress(0);
+    // setScanningProgress(0);
     setCaptureComplete(false);
     setAnalyzeComplete(false);
   };
-  
-  // Simulate capturing an image of a credit card
-  const simulateCapture = () => {
-    setScanStatus('Capturing image...');
-    
-    // Simulate a loading time for capturing the image
+
+  // Simulate capturing an image and extracting data (hardcoded)
+  const simulateCaptureAndExtraction = () => {
+    // This function is called when the user presses the capture button on the camera screen.
+    // The actual image from CameraView is not processed in this simulation.
+    setScanStatus('Capturing image...'); // Initial status
+
+    // Simulate a loading time for "capturing"
     setTimeout(() => {
-      setCaptureComplete(true);
+      setCaptureComplete(true); // Move to the "analyzing" screen
       setScanStatus('Processing card...');
-      
-      // Simulate analyzing the card after capturing
+
+      // Simulate analyzing the card after "capturing"
       setTimeout(() => {
         setScanStatus('Extracting card details...');
-        
+
         // Simulate finding each piece of information with delays
         setTimeout(() => {
-          setCardNumber('4242 4242 4242 4242');
+          setCardNumber('4242 4242 4242 4242'); // Hardcoded data
           setScanStatus('Found card number');
-          
+
           setTimeout(() => {
-            setCardholderName('JOHN DOE');
+            setCardholderName('JOHN DOE'); // Hardcoded data
             setScanStatus('Found cardholder name');
-            
+
             setTimeout(() => {
-              setExpiryDate('12/25');
+              setExpiryDate('12/25'); // Hardcoded data
               setScanStatus('Found expiry date');
               setAnalyzeComplete(true);
-              
+
               // Finish the scanning process
               setTimeout(() => {
-                setIsScanning(false);
+                setIsScanning(false); // Close camera/analysis view
                 Alert.alert('Card Scanned', 'Card details have been extracted successfully');
               }, 1000);
             }, 700);
           }, 800);
         }, 1000);
       }, 1200);
-    }, 1000);
+    }, 500); // Shortened initial "capture" delay as user already pressed a button
   };
-  
+
   const handlePayment = () => {
-    // Validate fields
     if (!cardNumber || !cardholderName || !expiryDate || !cvv) {
       Alert.alert('Missing Information', 'Please fill in all card details');
       return;
     }
-    
     setProcessing(true);
-    
-    // Simulate payment processing
     setTimeout(() => {
       setProcessing(false);
-      
-      // Record the order and clear cart
       completeOrder();
       clearCart();
-      
-      // Navigate to success screen
       Alert.alert(
-        'Payment Successful!', 
+        'Payment Successful!',
         'Your order has been placed successfully.',
         [{ text: 'OK', onPress: () => router.push('/(tabs)/profile') }]
       );
@@ -120,37 +132,53 @@ const PaymentScreen = () => {
   };
 
   const formatCardNumber = (text: string) => {
-    // Remove all non-digits
     const cleaned = text.replace(/\D/g, '');
-    // Add space after every 4 digits
     const formatted = cleaned.replace(/(\d{4})(?=\d)/g, '$1 ');
-    // Limit to 19 characters (16 digits + 3 spaces)
     return formatted.slice(0, 19);
   };
 
   const formatExpiryDate = (text: string) => {
-    // Remove all non-digits
     const cleaned = text.replace(/\D/g, '');
-    // Format as MM/YY
     if (cleaned.length >= 2) {
       return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`;
     }
     return cleaned;
   };
-  
-  // Render camera scanning simulation screen
+
+  // Render logic for different scanning states
   if (isScanning) {
+    if (!permission) {
+      // Permissions are still loading (should be quick)
+      return <View style={styles.fullScreen}><ActivityIndicator size="large" color="#FFFFFF" style={styles.centeredIndicator} /></View>;
+    }
+
+    if (!permission.granted) {
+      // Permissions are not granted
+      return (
+        <View style={styles.fullScreenCentered}>
+          <Text style={styles.permissionText}>Camera permission is required to scan your card.</Text>
+          <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+            <Text style={styles.buttonText}>Grant Permission</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.cancelButton, {marginTop: 10}]} // Added margin for spacing
+            onPress={() => setIsScanning(false)}
+          >
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // If capture is "complete" (simulation step), show the analysis screen
     if (captureComplete) {
-      // Show the analysis screen after capture
       return (
         <View style={styles.fullScreen}>
           <View style={styles.analyzeContainer}>
             <View style={styles.statusBar}>
               <Text style={styles.statusText}>{scanStatus}</Text>
             </View>
-            
             {!analyzeComplete && <ActivityIndicator size="large" color="#FFFFFF" style={styles.loadingIndicator} />}
-            
             {analyzeComplete ? (
               <View style={styles.resultContainer}>
                 <Text style={styles.resultText}>Card Number: {cardNumber}</Text>
@@ -158,54 +186,56 @@ const PaymentScreen = () => {
                 <Text style={styles.resultText}>Expires: {expiryDate}</Text>
               </View>
             ) : null}
-            
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.cancelButton}
-              onPress={() => setIsScanning(false)}
+              onPress={() => setIsScanning(false)} // Allow canceling analysis
             >
-              <Text style={styles.buttonText}>Cancel</Text>
+              <Text style={styles.buttonText}>Done</Text>
             </TouchableOpacity>
           </View>
         </View>
       );
     }
-    
-    // Show the camera simulation screen
+
+    // Show the REAL camera view with overlays
     return (
       <View style={styles.fullScreen}>
-        <View style={styles.cameraSim}>
-          <View style={styles.statusBar}>
-            <Text style={styles.statusText}>{scanStatus}</Text>
+        <CameraView style={StyleSheet.absoluteFillObject} facing="back" testID="camera-view">
+          <View style={styles.cameraOverlay}>
+            <View style={styles.cameraTopBar}>
+                <Text style={styles.statusText}>{scanStatus}</Text>
+            </View>
+
+            <View style={styles.cardFrame}>
+              <Text style={styles.frameText}>Position card in frame</Text>
+            </View>
+
+            <View style={styles.cameraControls}>
+              <TouchableOpacity
+                style={styles.cameraCancelButton}
+                onPress={() => setIsScanning(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.captureButton}
+                onPress={simulateCaptureAndExtraction}
+              >
+                <View style={styles.captureInnerButton} />
+              </TouchableOpacity>
+              {/* Placeholder for symmetry if needed, or adjust justifyContent */}
+              <View style={{ width: styles.cameraCancelButton.width || 70 }} />
+            </View>
           </View>
-          
-          <View style={styles.cardFrame}>
-            <Text style={styles.frameText}>Position card here</Text>
-          </View>
-          
-          <View style={styles.cameraControls}>
-            <TouchableOpacity 
-              style={styles.cancelButton}
-              onPress={() => setIsScanning(false)}
-            >
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.captureButton}
-              onPress={simulateCapture}
-            >
-              <View style={styles.captureCircle} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        </CameraView>
       </View>
     );
   }
 
-  // Regular payment screen
+  // Regular payment form screen
   return (
     <ScreenContainer>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
@@ -237,9 +267,9 @@ const PaymentScreen = () => {
                   onChangeText={(text) => setCardNumber(formatCardNumber(text))}
                   maxLength={19}
                 />
-                <TouchableOpacity 
-                  style={styles.scanButton} 
-                  onPress={startScanning}
+                <TouchableOpacity
+                  style={styles.scanButton}
+                  onPress={startCardScan} // Changed to startCardScan
                 >
                   <FontAwesome name="camera" size={20} color="#007AFF" />
                 </TouchableOpacity>
@@ -398,40 +428,60 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  // Camera simulation styles
+  // Full screen and camera related styles
   fullScreen: {
     flex: 1,
-    backgroundColor: 'black',
+    backgroundColor: 'black', // Camera background is black
   },
-  cameraSim: {
+  fullScreenCentered: { // For permission messages
     flex: 1,
     backgroundColor: '#222',
-    justifyContent: 'space-between',
-    padding: 20,
-  },
-  analyzeContainer: {
-    flex: 1, 
-    backgroundColor: '#222',
-    justifyContent: 'space-between',
-    padding: 20,
+    justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  statusBar: {
-    backgroundColor: 'rgba(0,0,0,0.7)',
+  centeredIndicator: {
+    alignSelf: 'center', // Center activity indicator in fullScreen
+    justifyContent: 'center',
+    flex: 1,
+  },
+  permissionText: {
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  permissionButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  cameraOverlay: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    justifyContent: 'space-between', // Pushes top bar to top, controls to bottom
+    paddingHorizontal: 20,
+    paddingVertical: Platform.OS === 'ios' ? 50 : 30, // Adjust padding for status bar/notches
+  },
+  cameraTopBar: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 10,
     borderRadius: 8,
-    marginTop: 40,
     alignSelf: 'center',
+    // marginTop: Platform.OS === 'ios' ? 40 : 20, // Moved padding to cameraOverlay
   },
   statusText: {
     color: 'white',
     textAlign: 'center',
     fontSize: 16,
   },
-  cardFrame: {
+  cardFrame: { // This view is in the "middle" part of the overlay
     alignSelf: 'center',
-    width: 300,
-    height: 190,
+    width: '95%', // Responsive width
+    aspectRatio: 1.586, // Credit card aspect ratio (85.60mm × 53.98mm)
+    maxWidth: 380, // Max width for larger screens
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.8)',
     borderRadius: 12,
@@ -441,42 +491,62 @@ const styles = StyleSheet.create({
   frameText: {
     color: 'rgba(255,255,255,0.7)',
     fontSize: 14,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    padding: 5,
+    borderRadius: 5,
   },
   cameraControls: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-between', // Distributes cancel, capture, and placeholder
     alignItems: 'center',
-    marginBottom: 30,
+    // marginBottom: Platform.OS === 'ios' ? 20 : 30, // Moved padding to cameraOverlay
   },
-  captureButton: {
+  captureButton: { // The large circular capture button
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.4)', // Semi-transparent white
     justifyContent: 'center',
     alignItems: 'center',
   },
-  captureCircle: {
+  captureInnerButton: { // The inner solid circle
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: 'white',
   },
-  cancelButton: {
+  cameraCancelButton: { // Specific style for cancel button on camera screen if needed
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)', // Darker, less prominent than main cancel
+    borderRadius: 8,
+    width: 90, // Give it a defined width for balance
+    alignItems: 'center',
+  },
+  cancelButton: { // General cancel/done button style
     paddingVertical: 12,
     paddingHorizontal: 20,
     backgroundColor: '#FF3B30',
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 20,
+    // Removed fixed marginBottom, apply as needed
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
+  // Styles for the analysis screen (after "captureComplete")
+  analyzeContainer: {
+    flex: 1,
+    backgroundColor: '#222', // Same dark background
+    justifyContent: 'space-around', // Distribute elements better
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+  },
   loadingIndicator: {
-    marginBottom: 20,
+    // No specific style needed if it's just the component, or add margin if necessary
   },
   resultContainer: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -492,4 +562,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PaymentScreen; 
+export default PaymentScreen;

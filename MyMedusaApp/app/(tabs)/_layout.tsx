@@ -10,7 +10,6 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useCart } from '../../src/state/CartContext';
 
-// Define a standard tab bar height for calculations
 const TAB_BAR_HEIGHT = 60;
 
 function CartTabIcon({ color, focused }: { color: string, focused: boolean }) {
@@ -159,7 +158,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="auth"
         options={{
-          href: null, // Prevents the tab from being accessible via the tab bar
+          href: null, 
         }}
       />
       <Tabs.Screen

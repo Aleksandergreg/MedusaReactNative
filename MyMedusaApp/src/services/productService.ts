@@ -7,7 +7,7 @@ export interface Product {
   title: string;
   description: string | null;
   thumbnail: string | null;
-  handle: string | null;
+  handle: string | null; 
   variants: ProductVariant[];
   [key: string]: any; // For any additional fields
 }
@@ -42,7 +42,6 @@ export interface StoreProductsListRes {
 
 export const fetchProducts = async (params?: StoreProductsListParams): Promise<StoreProductsListRes> => {
   try {
-    // The base URL already includes /store
     const response = await medusaClient.get('/products', { params });
     // Axios wraps the response data in a `data` property
     return response.data;

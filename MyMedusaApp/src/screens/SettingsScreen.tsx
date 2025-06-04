@@ -20,8 +20,7 @@ const SettingsScreen = () => {
 
     if (result === BiometricAuthResult.SUCCESS) {
       Alert.alert('Success', 'Biometrics enabled!');
-      // TODO: Store preference locally (e.g., AsyncStorage)
-      // TODO: Implement backend logic to link this device/auth for future logins
+
     } else if (result === BiometricAuthResult.CANCELLED) {
       console.log('Biometric authentication cancelled');
     } else {

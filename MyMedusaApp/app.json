@@ -14,7 +14,8 @@
         "NSLocationWhenInUseUsageDescription": "We need your location to prefill your shipping address.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "We need your location to prefill your shipping address.",
         "NSLocationAlwaysUsageDescription": "We need your location to prefill your shipping address.",
-        "NSFaceIDUsageDescription": "Enable Face ID for quick and secure login."
+        "NSFaceIDUsageDescription": "Enable Face ID for quick and secure login.",
+        "NSCameraUsageDescription": "Allow camera access to scan your credit card."
       }
     },
     "android": {
@@ -27,7 +28,8 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "USE_BIOMETRIC",
-        "android.permission.USE_BIOMETRIC"
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -52,7 +54,14 @@
           "faceIDPermission": "Enable Face ID for quick and secure login."
         }
       ],
-      "react-native-vision-camera"
+      "react-native-vision-camera",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "",
+          "enableGooglePay": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
